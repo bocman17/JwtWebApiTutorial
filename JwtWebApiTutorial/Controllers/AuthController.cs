@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -13,10 +14,25 @@ namespace JwtWebApiTutorial.Controllers
     {
         public static User user = new User();
         private readonly IConfiguration _configuration;
+        private readonly IUserService _userService;
 
-        public AuthController(IConfiguration configuration)
+        public AuthController(IConfiguration configuration, IUserService userService)
         {
             _configuration = configuration;
+            _userService = userService;
+        }
+
+        [HttpGet, Authorize]
+        public ActionResult<string> GetMe()
+        {
+
+            var userName = _userService.GetMyName();
+            return Ok(userName);
+
+            //var userName = User?.Identity?.Name;
+            //var userName2 = User.FindFirstValue(ClaimTypes.Name);
+            //var role = User.FindFirstValue(ClaimTypes.Role);
+            //return Ok(new {userName, userName2, role});
         }
 
         [HttpPost("register")]
@@ -55,7 +71,6 @@ namespace JwtWebApiTutorial.Controllers
             {
                 new Claim(ClaimTypes.Name, user.Username),
                 new Claim(ClaimTypes.Role, "Admin")
-
             };
 
             var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(
